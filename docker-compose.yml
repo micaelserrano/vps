@@ -1,0 +1,80 @@
+version: '3.7'
+networks:
+  proxy:
+    external: true
+
+
+services:
+  nginx_proxy_manager:
+    container_name: nginx_proxy_manager
+    image: 'jc21/nginx-proxy-manager:latest'
+    restart: unless-stopped
+    environment:
+      TZ: ${TIMEZONE}
+      AUTHELIA_ENCRYPTION_KEY: ${AUTHELIA_ENCRYPTION_KEY}
+      AUTHELIA_JWT_SECRET: ${AUTHELIA_JWT_SECRET}
+      AUTHELIA_STORAGE_MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+      AUTHELIA_STORAGE_MYSQL_USERNAME: ${MYSQL_USERNAME} 
+      AUTHELIA_SESSION_MYSQL_DATABASE: ${MYSQL_DATABASE}
+      AUTHELIA_SESSION_REDIS_PASSWORD: ${REDIS_PASSWORD}
+      AUTHELIA_DEFAULT_REDIRECTION_URL: auth.${HOSTNAME}
+      AUTHELIA_STORAGE_ENCRYPTION_KEY: ${AUTHELIA_STORAGE_ENCRYPTION_KEY}
+      AUTHELIA_TOTP_ISSUER: ${HOSTNAME}
+      AUTHELIA_SESSION_SECRET: ${AUTHELIA_SESSION_SECRET}
+      AUTHELIA_NOTIFIER_SMTP_USERNAME: ${AUTHELIA_EMAIL_USERNAME}
+      AUTHELIA_NOTIFIER_SMTP_SENDER: ${AUTHELIA_EMAIL_USERNAME}
+      AUTHELIA_NOTIFIER_SMTP_PASSWORD: ${AUTHELIA_NOTIFIER_SMTP_PASSWORD}
+      AUTHELIA_NOTIFIER_SMTP_HOST: ${AUTHELIA_NOTIFIER_SMTP_HOST}
+      AUTHELIA_NOTIFIER_SMTP_PORT: ${AUTHELIA_NOTIFIER_SMTP_PORT}
+    ports:
+      - '80:80'
+      - '443:443'
+      - '81:81'
+    volumes:
+      - ${ROOT_FOLDER}/nginx_proxy_manager/data:/data
+      - ${ROOT_FOLDER}/nginx_proxy_manager/letsencrypt:/etc/letsencrypt
+    networks:
+      proxy:
+  authelia:
+    image: authelia/authelia
+    container_name: authelia
+    volumes:
+      - ${ROOT_FOLDER}/authelia/config:/config
+    networks:
+      proxy:
+    expose:
+      - 9091
+    restart: unless-stopped
+    healthcheck:
+      disable: true
+    environment:
+      TZ: ${TIMEZONE}
+  redis:
+    container_name: redis
+    image: bitnami/redis:latest
+    expose:
+      - 6379
+    volumes:
+      - ${ROOT_FOLDER}/authelia/redis:/bitnami/
+    environment:
+      REDIS_PASSWORD: ${REDIS_PASSWORD}
+    networks:
+      proxy:
+    restart: unless-stopped
+
+  mariadb:
+    container_name: mariadb
+    image: linuxserver/mariadb:latest
+    expose:
+      - 3306
+    volumes:
+      - ${ROOT_FOLDER}/authelia/mariadb:/config
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_ROOT_USER: ${MYSQL_ROOT_USER}
+      MYSQL_DATABASE: ${MYSQL_DATABASE} 
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}  
+    networks:
+      proxy:
+    restart: unless-stopped

@@ -1,0 +1,8 @@
+users:
+  admin:
+    displayname: "Admin user"
+    # Password is authelia
+    password: "ARGON_PASSWORD"  # yamllint disable-line rule:line-length
+    email: "EMAIL"
+    groups:
+      - admins
