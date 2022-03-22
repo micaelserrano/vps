@@ -74,6 +74,7 @@ storage:
   mysql:
     host: mariadb
     port: 3306
+    database: authelia
   
 notifier:
   disable_startup_check: true

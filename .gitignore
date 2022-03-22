@@ -1,3 +1,7 @@
 .env
 authelia/config/users_database.yml
 authelia/config/configuration.yml
+authelia/mariadb/*
+authelia/redis/*
+nginx_proxy_manager/data/*
+wireguard/config/*
